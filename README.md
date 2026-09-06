@@ -1,4 +1,4 @@
-﻿# LocalPro — Full-Stack Service Marketplace
+# LocalPro — Full-Stack Service Marketplace
 
 **LocalPro** is a production-quality, multi-role service marketplace where customers can discover vetted local professionals, compare services, check live calendar availability, book appointments, make secure payments, chat in real-time, leave verified reviews, and receive AI-ranked recommendations.
 
@@ -85,13 +85,13 @@ You can test each role using the pre-seeded credentials:
 
 - [x] **Phase 1**: Monorepo Scaffolding, TypeScript configuration, MongoDB Connection, User model, JWT Authentication & Role Guards.
 - [x] **Phase 2**: Category taxonomy, Professional profiles, Service catalogs, and Marketplace search/discovery with multi-criteria filters.
-- [ ] **Phase 3**: Working hours availability engine, double-booking prevention, and booking workflow.
-- [ ] **Phase 4**: Customer, Professional, and Admin role-specific dashboards.
-- [ ] **Phase 5**: Verified reviews, favorites, and notification center.
-- [ ] **Phase 6**: Socket.IO real-time 1-on-1 chat, presence, and typing indicators.
-- [ ] **Phase 7**: Stripe payments sandbox & Cloudinary uploads.
-- [ ] **Phase 8**: Weighted multi-factor AI recommendation engine and analytics.
-- [ ] **Phase 9**: Automated Jest & Supertest suites and security hardening.
+- [x] **Phase 3**: Working hours availability engine, double-booking prevention, and booking workflow.
+- [x] **Phase 4**: Customer, Professional, and Admin role-specific dashboards.
+- [x] **Phase 5**: Verified reviews, favorites, and notification center.
+- [x] **Phase 6**: Socket.IO real-time 1-on-1 chat, presence, and typing indicators.
+- [x] **Phase 7**: Stripe payments sandbox & Cloudinary uploads.
+- [x] **Phase 8**: Weighted multi-factor AI recommendation engine and analytics.
+- [x] **Phase 9**: Automated Jest & Supertest suites and security hardening.
 - [ ] **Phase 10**: Dockerization & CI/CD deployment pipelines.
 
 ---

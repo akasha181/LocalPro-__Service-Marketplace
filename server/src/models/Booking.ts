@@ -1,4 +1,4 @@
-﻿import mongoose, { Document, Schema, Model, Types } from 'mongoose';
+import mongoose, { Document, Schema, Model, Types } from 'mongoose';
 
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'REFUNDED';
@@ -15,6 +15,8 @@ export interface IBooking extends Document {
   totalPrice: number;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
+  stripeSessionId?: string;
+  stripePaymentIntentId?: string;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -78,6 +80,15 @@ const BookingSchema = new Schema<IBooking>(
       enum: ['PENDING', 'PAID', 'REFUNDED'],
       default: 'PENDING',
       index: true,
+    },
+    stripeSessionId: {
+      type: String,
+      sparse: true,
+      index: true,
+    },
+    stripePaymentIntentId: {
+      type: String,
+      sparse: true,
     },
     notes: {
       type: String,

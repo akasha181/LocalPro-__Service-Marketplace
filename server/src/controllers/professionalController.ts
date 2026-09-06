@@ -1,7 +1,8 @@
-﻿import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { Professional } from '../models/Professional';
 import { Service } from '../models/Service';
 import { Category } from '../models/Category';
+import { getRecommendedProfessionals } from '../services/recommendationService';
 import { sendResponse } from '../utils/response';
 import { AppError } from '../utils/appError';
 import { AuthRequest } from '../types';
@@ -166,6 +167,21 @@ export const getOwnProfile = async (req: AuthRequest, res: Response, next: NextF
       .populate('category', 'name slug icon');
 
     sendResponse(res, 200, true, { professional });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getRecommendations = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { category, limit } = req.query;
+
+    const recommendations = await getRecommendedProfessionals({
+      category: category ? String(category) : undefined,
+      limit: limit ? parseInt(String(limit), 10) : 6,
+    });
+
+    sendResponse(res, 200, true, { recommendations }, 'AI Recommendations generated');
   } catch (error) {
     next(error);
   }

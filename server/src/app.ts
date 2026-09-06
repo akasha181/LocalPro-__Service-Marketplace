@@ -1,4 +1,4 @@
-﻿import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -19,6 +19,10 @@ import adminRoutes from './routes/adminRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import favoriteRoutes from './routes/favoriteRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import chatRoutes from './routes/chatRoutes';
+import paymentRoutes from './routes/paymentRoutes';
+import uploadRoutes from './routes/uploadRoutes';
+import { setupSocketHandlers } from './services/socketService';
 import { errorHandler } from './middleware/errorMiddleware';
 import { AppError } from './utils/appError';
 import { sendResponse } from './utils/response';
@@ -84,6 +88,12 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/uploads', uploadRoutes);
+
+// Initialize Socket.IO event listeners
+setupSocketHandlers(io);
 
 // Catch-all route for unhandled endpoints
 app.all('*', (req: Request, _res: Response, next: NextFunction) => {

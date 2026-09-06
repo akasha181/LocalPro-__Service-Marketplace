@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
-import type { Professional, Category } from '../types';
-import { Search, Star, MapPin, CheckCircle, SlidersHorizontal, ArrowRight, ShieldCheck } from 'lucide-react';
+import type { Professional, Category, ScoredProfessional } from '../types';
+import { Search, Star, MapPin, CheckCircle, SlidersHorizontal, ArrowRight, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
 
 export const ExplorePage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -15,6 +15,28 @@ export const ExplorePage: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('rating');
   const [maxPrice, setMaxPrice] = useState<number>(200);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [recommendations, setRecommendations] = useState<ScoredProfessional[]>([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<boolean>(false);
+
+  // Fetch AI Recommendations
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      try {
+        setIsLoadingRecommendations(true);
+        const params: any = { limit: 3 };
+        if (selectedCategory) params.category = selectedCategory;
+        const res = await api.get('/professionals/recommendations', { params });
+        if (res.data.success) {
+          setRecommendations(res.data.data.recommendations);
+        }
+      } catch (err) {
+        console.error('Error loading recommendations:', err);
+      } finally {
+        setIsLoadingRecommendations(false);
+      }
+    };
+    fetchRecommendations();
+  }, [selectedCategory]);
 
   // Fetch Categories
   useEffect(() => {
@@ -148,6 +170,73 @@ export const ExplorePage: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* AI Smart Matches Section */}
+      {!isLoadingRecommendations && recommendations.length > 0 && !searchQuery.trim() && (
+        <div className="mb-10 bg-gradient-to-r from-indigo-900 via-slate-900 to-blue-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-indigo-500/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-2">
+                <Sparkles className="w-3.5 h-3.5" />
+                AI Smart Rank
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white">Recommended Specialists For You</h2>
+              <p className="text-xs text-indigo-200 mt-0.5">
+                Ranked by multi-factor score: customer satisfaction, job completion reliability, and pricing value.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {recommendations.map((rec) => (
+              <div
+                key={rec.professional._id}
+                className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 flex flex-col justify-between hover:bg-white/15 transition group"
+              >
+                <div>
+                  {/* AI Score Badge */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-md">
+                      ★ {rec.score}% Match Score
+                    </span>
+                    <span className="text-[11px] text-indigo-200 font-medium">
+                      ${rec.professional.hourlyRate}/hr
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={rec.professional.userId?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'}
+                      alt={rec.professional.userId?.name}
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-indigo-400/40"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold text-sm text-white truncate group-hover:text-indigo-200 transition">
+                        {rec.professional.userId?.name}
+                      </h3>
+                      <p className="text-xs text-indigo-300 truncate">{rec.professional.title}</p>
+                    </div>
+                  </div>
+
+                  {/* AI Match Reason */}
+                  <div className="mt-3 p-2 rounded-xl bg-black/20 border border-white/5 text-[11px] text-indigo-100 flex items-start gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                    <span className="leading-tight">{rec.recommendationReason}</span>
+                  </div>
+                </div>
+
+                <Link
+                  to={`/professionals/${rec.professional._id}`}
+                  className="mt-4 w-full py-2 rounded-xl text-xs font-semibold bg-indigo-500 hover:bg-indigo-600 text-white text-center shadow-xs transition flex items-center justify-center gap-1"
+                >
+                  View Profile & Book
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Professionals Grid */}
       {isLoading ? (

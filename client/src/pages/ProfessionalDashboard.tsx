@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { Service } from '../types';
@@ -15,8 +15,12 @@ import {
   User,
   Phone,
   Mail,
-  Clock3
+  Clock3,
+  MessageSquare,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
+import { ChatDrawer } from '../components/ChatDrawer';
 
 interface BookingRequest {
   _id: string;
@@ -45,7 +49,8 @@ export const ProfessionalDashboard: React.FC = () => {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<BookingRequest[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [activeTab, setActiveTab] = useState<'requests' | 'services'>('requests');
+  const [professional, setProfessional] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'requests' | 'services' | 'portfolio'>('requests');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'CONFIRMED' | 'COMPLETED'>('PENDING');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -57,6 +62,16 @@ export const ProfessionalDashboard: React.FC = () => {
   const [newPrice, setNewPrice] = useState<string>('');
   const [newDuration, setNewDuration] = useState<string>('60');
   const [serviceError, setServiceError] = useState<string | null>(null);
+
+  // Portfolio Upload State
+  const [portfolioTitle, setPortfolioTitle] = useState<string>('');
+  const [portfolioDesc, setPortfolioDesc] = useState<string>('');
+  const [portfolioImageBase64, setPortfolioImageBase64] = useState<string>('');
+  const [isUploadingPortfolio, setIsUploadingPortfolio] = useState<boolean>(false);
+  const [portfolioSuccess, setPortfolioSuccess] = useState<string | null>(null);
+
+  // Chat Drawer State
+  const [activeChatBooking, setActiveChatBooking] = useState<BookingRequest | null>(null);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -71,8 +86,9 @@ export const ProfessionalDashboard: React.FC = () => {
       }
 
       if (profileRes.data.success && profileRes.data.data.professional) {
-        const proId = profileRes.data.data.professional._id;
-        const srvRes = await api.get(`/services?professionalId=${proId}`);
+        const pro = profileRes.data.data.professional;
+        setProfessional(pro);
+        const srvRes = await api.get(`/services?professionalId=${pro._id}`);
         if (srvRes.data.success) {
           setServices(srvRes.data.data.services);
         }
@@ -81,6 +97,47 @@ export const ProfessionalDashboard: React.FC = () => {
       console.error('Error loading professional dashboard:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPortfolioImageBase64(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddPortfolio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!portfolioTitle.trim() || !portfolioImageBase64) {
+      alert('Please provide a title and select an image.');
+      return;
+    }
+
+    setIsUploadingPortfolio(true);
+    setPortfolioSuccess(null);
+    try {
+      const res = await api.post('/uploads/portfolio', {
+        title: portfolioTitle,
+        description: portfolioDesc,
+        image: portfolioImageBase64,
+      });
+
+      if (res.data.success) {
+        setPortfolioSuccess('Portfolio work published successfully!');
+        setPortfolioTitle('');
+        setPortfolioDesc('');
+        setPortfolioImageBase64('');
+        fetchData();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to upload portfolio');
+    } finally {
+      setIsUploadingPortfolio(false);
     }
   };
 
@@ -182,6 +239,16 @@ export const ProfessionalDashboard: React.FC = () => {
             }`}
           >
             My Services ({services.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('portfolio')}
+            className={`px-4 py-2 text-xs font-semibold rounded-xl transition ${
+              activeTab === 'portfolio'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-white text-slate-700 border border-slate-200'
+            }`}
+          >
+            Portfolio & Gallery ({professional?.portfolio?.length || 0})
           </button>
         </div>
       </div>
@@ -328,35 +395,45 @@ export const ProfessionalDashboard: React.FC = () => {
                       <span className="text-xl font-black text-slate-900">${b.totalPrice}</span>
                     </div>
 
-                    {b.status === 'PENDING' && (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleUpdateStatus(b._id, 'CONFIRMED')}
-                          disabled={actionLoading === b._id}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition disabled:opacity-50"
-                        >
-                          {actionLoading === b._id ? 'Updating...' : 'Accept Job'}
-                        </button>
-                        <button
-                          onClick={() => handleUpdateStatus(b._id, 'REJECTED')}
-                          disabled={actionLoading === b._id}
-                          className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition disabled:opacity-50"
-                        >
-                          Decline
-                        </button>
-                      </div>
-                    )}
-
-                    {b.status === 'CONFIRMED' && (
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleUpdateStatus(b._id, 'COMPLETED')}
-                        disabled={actionLoading === b._id}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
+                        onClick={() => setActiveChatBooking(b)}
+                        className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
                       >
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        Mark as Completed
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        Chat
                       </button>
-                    )}
+
+                      {b.status === 'PENDING' && (
+                        <>
+                          <button
+                            onClick={() => handleUpdateStatus(b._id, 'CONFIRMED')}
+                            disabled={actionLoading === b._id}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition disabled:opacity-50"
+                          >
+                            {actionLoading === b._id ? 'Updating...' : 'Accept Job'}
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStatus(b._id, 'REJECTED')}
+                            disabled={actionLoading === b._id}
+                            className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition disabled:opacity-50"
+                          >
+                            Decline
+                          </button>
+                        </>
+                      )}
+
+                      {b.status === 'CONFIRMED' && (
+                        <button
+                          onClick={() => handleUpdateStatus(b._id, 'COMPLETED')}
+                          disabled={actionLoading === b._id}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Mark as Completed
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -501,6 +578,131 @@ export const ProfessionalDashboard: React.FC = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Tab 3: Portfolio & Gallery Manager */}
+      {activeTab === 'portfolio' && (
+        <div className="space-y-8">
+          {/* Upload New Portfolio Item Card */}
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Upload className="w-5 h-5 text-blue-600" />
+              Upload Work Portfolio & Showcase Images
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Add photos of your completed projects, repair jobs, and trade craftsmanship to attract more customers.
+            </p>
+
+            {portfolioSuccess && (
+              <div className="mt-4 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl font-medium">
+                ✓ {portfolioSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleAddPortfolio} className="mt-6 space-y-4 max-w-2xl">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Project Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Master Bathroom Copper Piping Replacement"
+                  value={portfolioTitle}
+                  onChange={(e) => setPortfolioTitle(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Description (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Completed within 4 hours with full pressure testing..."
+                  value={portfolioDesc}
+                  onChange={(e) => setPortfolioDesc(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Work Photo *
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageFileChange}
+                  className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition cursor-pointer"
+                />
+              </div>
+
+              {portfolioImageBase64 && (
+                <div className="mt-2">
+                  <span className="text-[11px] text-slate-400 block mb-1">Image Preview:</span>
+                  <img
+                    src={portfolioImageBase64}
+                    alt="Preview"
+                    className="w-48 h-32 object-cover rounded-xl border border-slate-200 shadow-xs"
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isUploadingPortfolio || !portfolioTitle.trim() || !portfolioImageBase64}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition disabled:opacity-50 flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                {isUploadingPortfolio ? 'Uploading to Cloud...' : 'Publish to Portfolio'}
+              </button>
+            </form>
+          </div>
+
+          {/* Current Portfolio Items Grid */}
+          <div>
+            <h3 className="text-base font-bold text-slate-900 mb-4">
+              Published Works ({professional?.portfolio?.length || 0})
+            </h3>
+            {!professional?.portfolio || professional.portfolio.length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
+                <ImageIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <h4 className="font-bold text-slate-800 text-sm">No portfolio items yet</h4>
+                <p className="text-xs text-slate-500 mt-1">Upload photos above to showcase your work to prospective clients.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {professional.portfolio.map((item: any, idx: number) => (
+                  <div key={idx} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs group">
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="w-full h-44 object-cover group-hover:scale-105 transition duration-300"
+                    />
+                    <div className="p-4">
+                      <h4 className="font-bold text-slate-900 text-sm">{item.title}</h4>
+                      {item.description && (
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{item.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Chat Drawer */}
+      {activeChatBooking && (
+        <ChatDrawer
+          isOpen={!!activeChatBooking}
+          onClose={() => setActiveChatBooking(null)}
+          targetUser={activeChatBooking.customerId as any}
+          bookingId={activeChatBooking._id}
+        />
       )}
     </div>
   );

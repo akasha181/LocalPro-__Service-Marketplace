@@ -1,8 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ReviewModal } from '../components/ReviewModal';
+import { ChatDrawer } from '../components/ChatDrawer';
 import {
   Calendar,
   Clock,
@@ -13,7 +14,10 @@ import {
   Clock3,
   MapPin,
   ArrowRight,
-  Star
+  Star,
+  MessageSquare,
+  CreditCard,
+  ShieldAlert
 } from 'lucide-react';
 
 interface BookingItem {
@@ -39,6 +43,7 @@ interface BookingItem {
   endTime: string;
   totalPrice: number;
   status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
+  paymentStatus?: 'PENDING' | 'PAID' | 'REFUNDED';
   notes?: string;
   createdAt: string;
 }
@@ -52,6 +57,9 @@ export const MyBookingsPage: React.FC = () => {
 
   // Review Modal State
   const [reviewBooking, setReviewBooking] = useState<BookingItem | null>(null);
+
+  // Chat Drawer State
+  const [activeChatBooking, setActiveChatBooking] = useState<BookingItem | null>(null);
 
   const fetchBookings = async () => {
     setIsLoading(true);
@@ -69,7 +77,43 @@ export const MyBookingsPage: React.FC = () => {
 
   useEffect(() => {
     fetchBookings();
+
+    // Check for returned Stripe session query params
+    const query = new URLSearchParams(window.location.search);
+    const sessionId = query.get('session_id');
+    const bookingId = query.get('booking_id');
+
+    if (sessionId && bookingId) {
+      const verifyStripePayment = async () => {
+        try {
+          const res = await api.post('/payments/verify', { bookingId, sessionId });
+          if (res.data.success) {
+            fetchBookings();
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        } catch (err) {
+          console.error('Payment verification failed', err);
+        }
+      };
+      verifyStripePayment();
+    }
   }, []);
+
+  const handlePayNow = async (bookingId: string) => {
+    try {
+      setActionLoading(bookingId);
+      const res = await api.post('/payments/create-session', { bookingId });
+      if (res.data.success && res.data.data.sessionUrl) {
+        window.location.href = res.data.data.sessionUrl;
+      } else {
+        alert('Could not initiate Stripe checkout session.');
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Payment initiation failed.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleCancelBooking = async (id: string) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
@@ -252,7 +296,33 @@ export const MyBookingsPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                  {/* Payment Status / Action */}
+                  {b.paymentStatus === 'PAID' ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      ✓ Paid
+                    </span>
+                  ) : (
+                    b.status !== 'CANCELLED' && b.status !== 'REJECTED' && (
+                      <button
+                        onClick={() => handlePayNow(b._id)}
+                        disabled={actionLoading === b._id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition disabled:opacity-50"
+                      >
+                        <CreditCard className="w-3.5 h-3.5" />
+                        {actionLoading === b._id ? 'Securing...' : 'Pay with Stripe'}
+                      </button>
+                    )
+                  )}
+
+                  <button
+                    onClick={() => setActiveChatBooking(b)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold transition"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    Chat
+                  </button>
+
                   {b.status === 'COMPLETED' && (
                     <button
                       onClick={() => setReviewBooking(b)}
@@ -290,6 +360,16 @@ export const MyBookingsPage: React.FC = () => {
           onReviewSubmitted={() => {
             fetchBookings();
           }}
+        />
+      )}
+
+      {/* Chat Drawer */}
+      {activeChatBooking && (
+        <ChatDrawer
+          isOpen={!!activeChatBooking}
+          onClose={() => setActiveChatBooking(null)}
+          targetUser={activeChatBooking.professionalId?.userId as any}
+          bookingId={activeChatBooking._id}
         />
       )}
     </div>

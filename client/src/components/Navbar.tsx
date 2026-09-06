@@ -1,12 +1,14 @@
-﻿import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { NotificationBell } from './NotificationBell';
-import { Wrench, LogOut, Shield, Briefcase, Calendar, Compass, Heart } from 'lucide-react';
+import { ChatDrawer } from './ChatDrawer';
+import { Wrench, LogOut, Shield, Briefcase, Calendar, Compass, Heart, MessageSquare } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -68,6 +70,15 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center gap-3">
           {isAuthenticated && user ? (
             <div className="flex items-center gap-3">
+              {/* Messages Trigger */}
+              <button
+                onClick={() => setIsChatOpen(true)}
+                className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                title="Messages"
+              >
+                <MessageSquare className="w-5 h-5" />
+              </button>
+
               {/* Notification Bell */}
               <NotificationBell />
 
@@ -108,6 +119,9 @@ export const Navbar: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Global Messages Drawer */}
+      <ChatDrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </header>
   );
 };

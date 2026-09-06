@@ -1,9 +1,10 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { Professional, Service } from '../types';
 import { BookingModal } from '../components/BookingModal';
+import { ChatDrawer } from '../components/ChatDrawer';
 import {
   Star,
   MapPin,
@@ -40,9 +41,10 @@ export const ProfessionalDetailsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Booking Modal State
+  // Booking Modal & Chat State
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -202,6 +204,15 @@ export const ProfessionalDetailsPage: React.FC = () => {
                 <span className="text-2xl font-black text-slate-900">${professional.hourlyRate}</span>
                 <span className="text-xs text-slate-500">/hr</span>
               </div>
+              {isAuthenticated && (
+                <button
+                  onClick={() => setIsChatOpen(true)}
+                  className="px-5 py-3 rounded-2xl font-semibold text-sm bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center justify-center gap-2 transition"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Message Specialist
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -366,6 +377,13 @@ export const ProfessionalDetailsPage: React.FC = () => {
           service={selectedService}
         />
       )}
+
+      {/* Chat Drawer */}
+      <ChatDrawer
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        targetUser={professional.userId}
+      />
     </div>
   );
 };

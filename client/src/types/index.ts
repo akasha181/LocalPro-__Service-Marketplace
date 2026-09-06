@@ -1,4 +1,4 @@
-﻿export type UserRole = 'customer' | 'professional' | 'admin';
+export type UserRole = 'customer' | 'professional' | 'admin';
 
 export interface User {
   _id: string;
@@ -71,4 +71,40 @@ export interface Service {
   durationMinutes: number;
   isActive: boolean;
   createdAt: string;
+}
+
+export interface Message {
+  _id: string;
+  conversationId: string;
+  sender: {
+    _id: string;
+    name: string;
+    avatar?: string;
+  };
+  recipient: string;
+  text: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface Conversation {
+  _id: string;
+  participants: User[];
+  lastMessage?: Message;
+  bookingId?: any;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScoredProfessional {
+  professional: Professional;
+  score: number;
+  matchFactors: {
+    ratingScore: number;
+    experienceScore: number;
+    popularityScore: number;
+    completionScore: number;
+    valueScore: number;
+  };
+  recommendationReason: string;
 }
