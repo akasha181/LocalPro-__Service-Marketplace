@@ -9,6 +9,8 @@ import { ProfessionalDetailsPage } from './pages/ProfessionalDetailsPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { MyBookingsPage } from './pages/MyBookingsPage';
+import { ProfessionalDashboard } from './pages/ProfessionalDashboard';
+import { AdminDashboard } from './pages/AdminDashboard';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 const queryClient = new QueryClient({
@@ -43,28 +45,12 @@ export function App() {
 
                 {/* Professional Dashboard Routes */}
                 <Route element={<ProtectedRoute allowedRoles={['professional']} />}>
-                  <Route
-                    path="/pro/dashboard"
-                    element={
-                      <div className="max-w-7xl mx-auto px-4 py-12">
-                        <h1 className="text-2xl font-bold">Professional Dashboard</h1>
-                        <p className="text-slate-500 mt-1">Manage incoming booking requests, calendar slots, and services.</p>
-                      </div>
-                    }
-                  />
+                  <Route path="/pro/dashboard" element={<ProfessionalDashboard />} />
                 </Route>
 
                 {/* Admin Dashboard Routes */}
                 <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-                  <Route
-                    path="/admin"
-                    element={
-                      <div className="max-w-7xl mx-auto px-4 py-12">
-                        <h1 className="text-2xl font-bold">Admin Portal</h1>
-                        <p className="text-slate-500 mt-1">Platform management, verification queues, and analytics.</p>
-                      </div>
-                    }
-                  />
+                  <Route path="/admin" element={<AdminDashboard />} />
                 </Route>
 
                 {/* 404 Fallback */}
