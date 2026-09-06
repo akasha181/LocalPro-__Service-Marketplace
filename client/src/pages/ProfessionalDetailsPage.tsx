@@ -2,6 +2,7 @@
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import type { Professional, Service } from '../types';
+import { BookingModal } from '../components/BookingModal';
 import {
   Star,
   MapPin,
@@ -11,7 +12,6 @@ import {
   CheckCircle2,
   Calendar,
   ArrowLeft,
-  DollarSign
 } from 'lucide-react';
 
 export const ProfessionalDetailsPage: React.FC = () => {
@@ -20,6 +20,10 @@ export const ProfessionalDetailsPage: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Booking Modal State
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -39,6 +43,11 @@ export const ProfessionalDetailsPage: React.FC = () => {
     };
     fetchDetails();
   }, [id]);
+
+  const handleBookService = (service: Service) => {
+    setSelectedService(service);
+    setIsModalOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -70,7 +79,7 @@ export const ProfessionalDetailsPage: React.FC = () => {
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Link
-            to="/"
+            to="/explore"
             className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-blue-600 mb-6 transition"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -179,7 +188,7 @@ export const ProfessionalDetailsPage: React.FC = () => {
                     <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200">
                       <div className="text-xl font-extrabold text-slate-900">${srv.price}</div>
                       <button
-                        onClick={() => alert(`Phase 3 Booking modal for service "${srv.title}" ($${srv.price}) will launch next!`)}
+                        onClick={() => handleBookService(srv)}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
                       >
                         <Calendar className="w-3.5 h-3.5" />
@@ -238,6 +247,16 @@ export const ProfessionalDetailsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      {selectedService && (
+        <BookingModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          professional={professional}
+          service={selectedService}
+        />
+      )}
     </div>
   );
 };

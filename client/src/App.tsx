@@ -8,6 +8,7 @@ import { ExplorePage } from './pages/ExplorePage';
 import { ProfessionalDetailsPage } from './pages/ProfessionalDetailsPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { MyBookingsPage } from './pages/MyBookingsPage';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 const queryClient = new QueryClient({
@@ -37,15 +38,7 @@ export function App() {
 
                 {/* Customer Dashboard Routes */}
                 <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
-                  <Route
-                    path="/customer/bookings"
-                    element={
-                      <div className="max-w-7xl mx-auto px-4 py-12">
-                        <h1 className="text-2xl font-bold">My Bookings</h1>
-                        <p className="text-slate-500 mt-1">Track and manage your service appointments.</p>
-                      </div>
-                    }
-                  />
+                  <Route path="/customer/bookings" element={<MyBookingsPage />} />
                 </Route>
 
                 {/* Professional Dashboard Routes */}

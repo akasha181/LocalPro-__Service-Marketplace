@@ -14,6 +14,7 @@ import authRoutes from './routes/authRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import professionalRoutes from './routes/professionalRoutes';
 import serviceRoutes from './routes/serviceRoutes';
+import bookingRoutes from './routes/bookingRoutes';
 import { errorHandler } from './middleware/errorMiddleware';
 import { AppError } from './utils/appError';
 import { sendResponse } from './utils/response';
@@ -74,6 +75,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/professionals', professionalRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // Catch-all route for unhandled endpoints
 app.all('*', (req: Request, _res: Response, next: NextFunction) => {
