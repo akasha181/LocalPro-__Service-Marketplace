@@ -1,7 +1,8 @@
 ﻿import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Wrench, LogOut, Shield, Briefcase, Calendar, Compass } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
+import { Wrench, LogOut, Shield, Briefcase, Calendar, Compass, Heart } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -67,6 +68,9 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center gap-3">
           {isAuthenticated && user ? (
             <div className="flex items-center gap-3">
+              {/* Notification Bell */}
+              <NotificationBell />
+
               <div className="flex items-center gap-2">
                 <img
                   src={user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'}

@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { ReviewModal } from '../components/ReviewModal';
 import {
   Calendar,
   Clock,
@@ -11,7 +12,8 @@ import {
   CheckCircle,
   Clock3,
   MapPin,
-  ArrowRight
+  ArrowRight,
+  Star
 } from 'lucide-react';
 
 interface BookingItem {
@@ -46,8 +48,10 @@ export const MyBookingsPage: React.FC = () => {
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Review Modal State
+  const [reviewBooking, setReviewBooking] = useState<BookingItem | null>(null);
 
   const fetchBookings = async () => {
     setIsLoading(true);
@@ -57,7 +61,7 @@ export const MyBookingsPage: React.FC = () => {
         setBookings(res.data.data.bookings);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load bookings');
+      console.error('Failed to load bookings:', err);
     } finally {
       setIsLoading(false);
     }
@@ -237,7 +241,7 @@ export const MyBookingsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Price & Action */}
+              {/* Price & Actions */}
               <div className="flex items-center justify-between md:flex-col md:items-end gap-3 border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
                 <div className="text-left md:text-right">
                   <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
@@ -248,19 +252,45 @@ export const MyBookingsPage: React.FC = () => {
                   </span>
                 </div>
 
-                {(b.status === 'PENDING' || b.status === 'CONFIRMED') && (
-                  <button
-                    onClick={() => handleCancelBooking(b._id)}
-                    disabled={actionLoading === b._id}
-                    className="px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl transition disabled:opacity-50"
-                  >
-                    {actionLoading === b._id ? 'Cancelling...' : 'Cancel Booking'}
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {b.status === 'COMPLETED' && (
+                    <button
+                      onClick={() => setReviewBooking(b)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-xs font-semibold transition"
+                    >
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      Leave a Review
+                    </button>
+                  )}
+
+                  {(b.status === 'PENDING' || b.status === 'CONFIRMED') && (
+                    <button
+                      onClick={() => handleCancelBooking(b._id)}
+                      disabled={actionLoading === b._id}
+                      className="px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl transition disabled:opacity-50"
+                    >
+                      {actionLoading === b._id ? 'Cancelling...' : 'Cancel Booking'}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Review Submission Modal */}
+      {reviewBooking && (
+        <ReviewModal
+          isOpen={!!reviewBooking}
+          onClose={() => setReviewBooking(null)}
+          bookingId={reviewBooking._id}
+          professionalName={reviewBooking.professionalId?.userId?.name || 'Specialist'}
+          serviceTitle={reviewBooking.serviceId?.title || 'Service'}
+          onReviewSubmitted={() => {
+            fetchBookings();
+          }}
+        />
       )}
     </div>
   );

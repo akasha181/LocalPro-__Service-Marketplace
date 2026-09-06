@@ -16,6 +16,9 @@ import professionalRoutes from './routes/professionalRoutes';
 import serviceRoutes from './routes/serviceRoutes';
 import bookingRoutes from './routes/bookingRoutes';
 import adminRoutes from './routes/adminRoutes';
+import reviewRoutes from './routes/reviewRoutes';
+import favoriteRoutes from './routes/favoriteRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 import { errorHandler } from './middleware/errorMiddleware';
 import { AppError } from './utils/appError';
 import { sendResponse } from './utils/response';
@@ -52,7 +55,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Rate Limiter
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 400,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -78,6 +81,9 @@ app.use('/api/professionals', professionalRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/favorites', favoriteRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Catch-all route for unhandled endpoints
 app.all('*', (req: Request, _res: Response, next: NextFunction) => {
