@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Database Service: MongoDB
+  # ==========================================
+  mongodb:
+    image: mongo:7.0
+    container_name: localpro-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=localpro
+    networks:
+      - localpro-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Backend API & WebSocket Service
+  # ==========================================
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: localpro-server
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - CLIENT_URL=http://localhost
+      - MONGO_URI=mongodb://mongodb:27017/localpro
+      - JWT_SECRET=localpro_production_secret_key_2026_jwt_token_secure
+      - JWT_EXPIRES_IN=7d
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_mock_localpro}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_mock_localpro}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-mock_localpro_cloud}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-mock_localpro_key}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-mock_localpro_secret}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - localpro-network
+
+  # ==========================================
+  # Frontend Client & Web Server Service
+  # ==========================================
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=/api
+    container_name: localpro-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    networks:
+      - localpro-network
+
+# ==========================================
+# Persistent Volumes & Private Bridge Network
+# ==========================================
+volumes:
+  mongo_data:
+    driver: local
+
+networks:
+  localpro-network:
+    driver: bridge

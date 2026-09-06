@@ -67,16 +67,28 @@ npm run dev
 ```
 *The React client will be available at `http://localhost:5173`.*
 
+### 4. Or Run Everything with Docker Compose 🐳
+```bash
+# Start MongoDB, Server API, and Nginx Client in one command
+docker compose up --build -d
+
+# View status
+docker compose ps
+
+# View logs
+docker compose logs -f
+```
+*Frontend opens at `http://localhost`, API available at `http://localhost:5000/api`, and MongoDB at `localhost:27017`.*
+
 ---
 
-## 🔑 Demo Login Credentials
-
-You can test each role using the pre-seeded credentials:
+## 🔑 Demo Seed Accounts
 
 | Role | Email | Password |
 | :--- | :--- | :--- |
 | **Admin** | `admin@localpro.com` | `password123` |
-| **Professional** | `pro@localpro.com` | `password123` |
+| **Professional (Electrician)** | `sarah@localpro.com` | `password123` |
+| **Professional (Plumber)** | `mike@localpro.com` | `password123` |
 | **Customer** | `customer@localpro.com` | `password123` |
 
 ---
@@ -92,7 +104,7 @@ You can test each role using the pre-seeded credentials:
 - [x] **Phase 7**: Stripe payments sandbox & Cloudinary uploads.
 - [x] **Phase 8**: Weighted multi-factor AI recommendation engine and analytics.
 - [x] **Phase 9**: Automated Jest & Supertest suites and security hardening.
-- [ ] **Phase 10**: Dockerization & CI/CD deployment pipelines.
+- [x] **Phase 10**: Dockerization & CI/CD deployment pipelines.
 
 ---
 
