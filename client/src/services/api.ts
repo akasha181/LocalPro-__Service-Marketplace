@@ -198,6 +198,64 @@ api.interceptors.response.use(
       });
     }
 
+    // 10. Admin: Stats
+    if (url.includes('/admin/stats')) {
+      return Promise.resolve({
+        data: {
+          success: true,
+          data: {
+            stats: {
+              totalUsers: DEMO_USERS.length,
+              totalPros: DEMO_PROFESSIONALS.length,
+              pendingApprovals: 0,
+              totalBookings: 12,
+              totalRevenue: 2450,
+            },
+          },
+        },
+      });
+    }
+
+    // 11. Admin: Users list
+    if (url.includes('/admin/users') && method === 'get') {
+      return Promise.resolve({
+        data: {
+          success: true,
+          data: {
+            users: DEMO_USERS.map((u) => ({
+              ...u,
+              isActive: true,
+            })),
+          },
+        },
+      });
+    }
+
+    // 12. Admin: Professionals list
+    if (url.includes('/admin/professionals') && method === 'get') {
+      return Promise.resolve({
+        data: {
+          success: true,
+          data: {
+            professionals: DEMO_PROFESSIONALS.map((p) => ({
+              ...p,
+              isApproved: true,
+            })),
+          },
+        },
+      });
+    }
+
+    // 13. Admin: Toggle Approval / Status
+    if (url.includes('/admin/professionals/') || url.includes('/admin/users/')) {
+      return Promise.resolve({
+        data: {
+          success: true,
+          message: 'Status updated successfully',
+        },
+      });
+    }
+
     return Promise.reject(error);
   }
 );
