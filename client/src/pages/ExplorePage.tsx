@@ -2,20 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import type { Professional, Category, ScoredProfessional } from '../types';
+import { DEMO_PROFESSIONALS, DEMO_CATEGORIES, DEMO_RECOMMENDATIONS } from '../services/mockStore';
 import { Search, Star, MapPin, CheckCircle, SlidersHorizontal, ArrowRight, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
 
 export const ExplorePage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || '';
 
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [professionals, setProfessionals] = useState<Professional[]>(DEMO_PROFESSIONALS);
+  const [categories, setCategories] = useState<Category[]>(DEMO_CATEGORIES);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('rating');
   const [maxPrice, setMaxPrice] = useState<number>(200);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [recommendations, setRecommendations] = useState<ScoredProfessional[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [recommendations, setRecommendations] = useState<ScoredProfessional[]>(DEMO_RECOMMENDATIONS);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<boolean>(false);
 
   // Fetch AI Recommendations
@@ -26,11 +27,13 @@ export const ExplorePage: React.FC = () => {
         const params: any = { limit: 3 };
         if (selectedCategory) params.category = selectedCategory;
         const res = await api.get('/professionals/recommendations', { params });
-        if (res.data.success) {
+        if (res.data?.success && res.data.data?.recommendations?.length > 0) {
           setRecommendations(res.data.data.recommendations);
+        } else {
+          setRecommendations(DEMO_RECOMMENDATIONS);
         }
       } catch (err) {
-        console.error('Error loading recommendations:', err);
+        setRecommendations(DEMO_RECOMMENDATIONS);
       } finally {
         setIsLoadingRecommendations(false);
       }
@@ -43,11 +46,13 @@ export const ExplorePage: React.FC = () => {
     const fetchCategories = async () => {
       try {
         const res = await api.get('/categories');
-        if (res.data.success) {
+        if (res.data?.success && res.data.data?.categories?.length > 0) {
           setCategories(res.data.data.categories);
+        } else {
+          setCategories(DEMO_CATEGORIES);
         }
       } catch (err) {
-        console.error('Error loading categories:', err);
+        setCategories(DEMO_CATEGORIES);
       }
     };
     fetchCategories();
@@ -66,11 +71,29 @@ export const ExplorePage: React.FC = () => {
         if (searchQuery.trim()) params.search = searchQuery.trim();
 
         const res = await api.get('/professionals', { params });
-        if (res.data.success) {
+        if (res.data?.success && res.data.data?.professionals?.length > 0) {
           setProfessionals(res.data.data.professionals);
+        } else {
+          let list = [...DEMO_PROFESSIONALS];
+          if (selectedCategory) {
+            list = list.filter((p) => p.category.slug === selectedCategory || p.category._id === selectedCategory);
+          }
+          if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            list = list.filter((p) => p.title.toLowerCase().includes(q) || p.userId.name.toLowerCase().includes(q));
+          }
+          setProfessionals(list.length > 0 ? list : DEMO_PROFESSIONALS);
         }
       } catch (err) {
-        console.error('Error loading professionals:', err);
+        let list = [...DEMO_PROFESSIONALS];
+        if (selectedCategory) {
+          list = list.filter((p) => p.category.slug === selectedCategory || p.category._id === selectedCategory);
+        }
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          list = list.filter((p) => p.title.toLowerCase().includes(q) || p.userId.name.toLowerCase().includes(q));
+        }
+        setProfessionals(list.length > 0 ? list : DEMO_PROFESSIONALS);
       } finally {
         setIsLoading(false);
       }

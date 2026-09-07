@@ -239,3 +239,59 @@ export const DEMO_RECOMMENDATIONS: ScoredProfessional[] = [
   },
 ];
 
+export const DEMO_REVIEWS = [
+  {
+    _id: 'rev_1',
+    rating: 5,
+    comment: 'Exceptional work! Arrived right on time, explained everything thoroughly, and fixed the electrical panel cleanly.',
+    createdAt: '2026-02-15T14:30:00.000Z',
+    customerId: {
+      _id: 'user_customer_1',
+      name: 'Sarah Connor',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250',
+    },
+  },
+  {
+    _id: 'rev_2',
+    rating: 5,
+    comment: 'Super professional and courteous. Solved the problem in under an hour. Highly recommend!',
+    createdAt: '2026-02-18T10:15:00.000Z',
+    customerId: {
+      _id: 'user_admin_1',
+      name: 'Alex Rivera',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250',
+    },
+  },
+];
+
+export const DEMO_BOOKINGS = [
+  {
+    _id: 'booking_demo_1',
+    professionalId: {
+      _id: 'pro_1',
+      title: 'Master Licensed Electrician',
+      userId: {
+        name: 'David Vance',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250',
+        phone: '+1 (555) 438-9201',
+        email: 'pro@localpro.com',
+      },
+    },
+    serviceId: {
+      _id: 'serv_1',
+      title: 'Comprehensive Electrical Diagnostic & Inspection',
+      durationMinutes: 60,
+      price: 120,
+    },
+    date: '2026-03-12',
+    startTime: '10:00',
+    endTime: '11:00',
+    totalPrice: 120,
+    status: 'CONFIRMED' as const,
+    paymentStatus: 'PAID' as const,
+    notes: 'Please check the second floor circuit breaker.',
+    createdAt: '2026-03-01T10:00:00.000Z',
+  },
+];
+
+

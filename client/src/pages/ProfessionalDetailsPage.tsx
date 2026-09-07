@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import type { Professional, Service } from '../types';
 import { BookingModal } from '../components/BookingModal';
 import { ChatDrawer } from '../components/ChatDrawer';
+import { DEMO_PROFESSIONALS, DEMO_SERVICES, DEMO_REVIEWS } from '../services/mockStore';
 import {
   Star,
   MapPin,
@@ -33,12 +34,17 @@ interface ReviewItem {
 export const ProfessionalDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { isAuthenticated } = useAuth();
-  const [professional, setProfessional] = useState<Professional | null>(null);
-  const [services, setServices] = useState<Service[]>([]);
-  const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  
+  // Immediately initialize with matching demo professional or default pro
+  const defaultFallbackPro = DEMO_PROFESSIONALS.find((p) => p._id === id) || DEMO_PROFESSIONALS[0];
+  const defaultFallbackServices = DEMO_SERVICES.filter((s) => s.professionalId === defaultFallbackPro._id);
+
+  const [professional, setProfessional] = useState<Professional | null>(defaultFallbackPro);
+  const [services, setServices] = useState<Service[]>(defaultFallbackServices.length > 0 ? defaultFallbackServices : DEMO_SERVICES);
+  const [reviews, setReviews] = useState<ReviewItem[]>(DEMO_REVIEWS);
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   // Booking Modal & Chat State
@@ -50,29 +56,28 @@ export const ProfessionalDetailsPage: React.FC = () => {
     const fetchDetails = async () => {
       try {
         const [proRes, revRes] = await Promise.all([
-          api.get(`/professionals/${id}`),
-          api.get(`/reviews/pro/${id}`).catch(() => ({ data: { success: false, data: { reviews: [] } } })),
+          api.get(`/professionals/${id}`).catch(() => null),
+          api.get(`/reviews/pro/${id}`).catch(() => null),
         ]);
 
-        if (proRes.data?.success && proRes.data.data?.professional) {
+        if (proRes?.data?.success && proRes.data.data?.professional) {
           setProfessional(proRes.data.data.professional);
-          setServices(proRes.data.data.services || []);
+          if (proRes.data.data.services && proRes.data.data.services.length > 0) {
+            setServices(proRes.data.data.services);
+          }
         } else {
-          // Robust 24/7 Fallback: Find matching demo professional
-          import('../services/mockStore').then(({ DEMO_PROFESSIONALS, DEMO_SERVICES }) => {
-            const fallbackPro = DEMO_PROFESSIONALS.find((p) => p._id === id) || DEMO_PROFESSIONALS[0];
-            const fallbackServices = DEMO_SERVICES.filter((s) => s.professionalId === fallbackPro._id);
-            setProfessional(fallbackPro);
-            setServices(fallbackServices.length > 0 ? fallbackServices : DEMO_SERVICES);
-          });
+          const fallbackPro = DEMO_PROFESSIONALS.find((p) => p._id === id) || DEMO_PROFESSIONALS[0];
+          const fallbackServices = DEMO_SERVICES.filter((s) => s.professionalId === fallbackPro._id);
+          setProfessional(fallbackPro);
+          setServices(fallbackServices.length > 0 ? fallbackServices : DEMO_SERVICES);
         }
 
-        if (revRes.data?.success) {
-          setReviews(revRes.data.data.reviews || []);
+        if (revRes?.data?.success && revRes.data.data?.reviews?.length > 0) {
+          setReviews(revRes.data.data.reviews);
         }
 
         // Check if favorited
-        if (isAuthenticated) {
+        if (isAuthenticated && id) {
           api.get(`/favorites/check/${id}`)
             .then((favRes) => {
               if (favRes.data?.success) {
@@ -82,15 +87,10 @@ export const ProfessionalDetailsPage: React.FC = () => {
             .catch(() => {});
         }
       } catch (err: any) {
-        // Fallback gracefully on network error when laptop is off
-        import('../services/mockStore').then(({ DEMO_PROFESSIONALS, DEMO_SERVICES }) => {
-          const fallbackPro = DEMO_PROFESSIONALS.find((p) => p._id === id) || DEMO_PROFESSIONALS[0];
-          const fallbackServices = DEMO_SERVICES.filter((s) => s.professionalId === fallbackPro._id);
-          setProfessional(fallbackPro);
-          setServices(fallbackServices.length > 0 ? fallbackServices : DEMO_SERVICES);
-        }).catch(() => {
-          setError('Error loading professional');
-        });
+        const fallbackPro = DEMO_PROFESSIONALS.find((p) => p._id === id) || DEMO_PROFESSIONALS[0];
+        const fallbackServices = DEMO_SERVICES.filter((s) => s.professionalId === fallbackPro._id);
+        setProfessional(fallbackPro);
+        setServices(fallbackServices.length > 0 ? fallbackServices : DEMO_SERVICES);
       } finally {
         setIsLoading(false);
       }

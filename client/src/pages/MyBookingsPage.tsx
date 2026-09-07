@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ReviewModal } from '../components/ReviewModal';
 import { ChatDrawer } from '../components/ChatDrawer';
+import { DEMO_BOOKINGS } from '../services/mockStore';
 import {
   Calendar,
   Clock,
@@ -65,11 +66,15 @@ export const MyBookingsPage: React.FC = () => {
     setIsLoading(true);
     try {
       const res = await api.get('/bookings/my');
-      if (res.data.success) {
+      if (res.data?.success && res.data.data?.bookings?.length > 0) {
         setBookings(res.data.data.bookings);
+      } else {
+        const localBookings = JSON.parse(localStorage.getItem('demo_bookings') || '[]');
+        setBookings(localBookings.length > 0 ? localBookings : (DEMO_BOOKINGS as unknown as BookingItem[]));
       }
     } catch (err: any) {
-      console.error('Failed to load bookings:', err);
+      const localBookings = JSON.parse(localStorage.getItem('demo_bookings') || '[]');
+      setBookings(localBookings.length > 0 ? localBookings : (DEMO_BOOKINGS as unknown as BookingItem[]));
     } finally {
       setIsLoading(false);
     }
