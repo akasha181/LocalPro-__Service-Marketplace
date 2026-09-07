@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Star, ShieldCheck, Zap, ArrowRight, Sparkles } from 'lucide-react';
 
@@ -40,7 +40,7 @@ export const LandingPage: React.FC = () => {
                 />
               </div>
               <Link
-                to="/register"
+                to="/explore"
                 className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 transition shadow-md"
               >
                 Find Pros
@@ -79,7 +79,8 @@ export const LandingPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((cat, i) => (
-              <div
+              <Link
+                to="/explore"
                 key={i}
                 className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition cursor-pointer group"
               >
@@ -93,7 +94,7 @@ export const LandingPage: React.FC = () => {
                   {cat.name}
                 </h3>
                 <p className="text-sm text-slate-500 mt-1">{cat.desc}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

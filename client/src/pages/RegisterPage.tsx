@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { UserRole } from '../types';
@@ -22,7 +22,7 @@ export const RegisterPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       await register(name, email, password, role, phone);
-      navigate('/');
+      navigate('/explore');
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Registration failed');
     } finally {

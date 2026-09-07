@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, AlertCircle, Wrench, ArrowRight } from 'lucide-react';
@@ -18,7 +18,7 @@ export const LoginPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      navigate('/');
+      navigate('/explore');
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to sign in');
     } finally {
