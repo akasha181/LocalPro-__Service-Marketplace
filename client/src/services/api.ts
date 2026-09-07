@@ -45,7 +45,24 @@ api.interceptors.response.use(
       });
     }
 
-    // 3. Professionals list
+    // 3. Single Professional Details by ID (e.g. /professionals/pro_1)
+    const singleProMatch = url.match(/\/professionals\/([^/?]+)/);
+    if (singleProMatch && method === 'get' && !url.includes('/recommendations')) {
+      const proId = singleProMatch[1];
+      const pro = DEMO_PROFESSIONALS.find((p) => p._id === proId) || DEMO_PROFESSIONALS[0];
+      const relatedServices = DEMO_SERVICES.filter((s) => s.professionalId === pro._id);
+      return Promise.resolve({
+        data: {
+          success: true,
+          data: {
+            professional: pro,
+            services: relatedServices.length > 0 ? relatedServices : DEMO_SERVICES,
+          },
+        },
+      });
+    }
+
+    // 4. Professionals list
     if (url.includes('/professionals') && method === 'get' && !url.includes('/recommendations')) {
       return Promise.resolve({
         data: {
@@ -55,6 +72,53 @@ api.interceptors.response.use(
             total: DEMO_PROFESSIONALS.length,
             page: 1,
             totalPages: 1,
+          },
+        },
+      });
+    }
+
+    // 5. Booking Availability Slots
+    if (url.includes('/bookings/availability')) {
+      return Promise.resolve({
+        data: {
+          success: true,
+          data: {
+            slots: [
+              { startTime: '09:00', endTime: '10:00', isAvailable: true },
+              { startTime: '10:00', endTime: '11:00', isAvailable: true },
+              { startTime: '11:00', endTime: '12:00', isAvailable: true },
+              { startTime: '13:00', endTime: '14:00', isAvailable: true },
+              { startTime: '14:00', endTime: '15:00', isAvailable: true },
+              { startTime: '15:00', endTime: '16:00', isAvailable: true },
+              { startTime: '16:00', endTime: '17:00', isAvailable: true },
+            ],
+          },
+        },
+      });
+    }
+
+    // 6. Reviews for a professional
+    if (url.includes('/reviews/pro/')) {
+      return Promise.resolve({
+        data: {
+          success: true,
+          data: {
+            reviews: [
+              {
+                _id: 'rev_1',
+                rating: 5,
+                comment: 'Prompt arrival, super clean workspace, and very professional diagnosis!',
+                createdAt: '2026-08-20T10:00:00.000Z',
+                customerId: { _id: 'cust_1', name: 'Emily Watson', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
+              },
+              {
+                _id: 'rev_2',
+                rating: 5,
+                comment: 'Fair pricing and solved an issue two other technicians could not diagnose.',
+                createdAt: '2026-08-15T14:30:00.000Z',
+                customerId: { _id: 'cust_2', name: 'Robert Davis', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150' },
+              },
+            ],
           },
         },
       });
