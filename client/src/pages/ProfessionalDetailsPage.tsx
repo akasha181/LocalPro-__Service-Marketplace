@@ -54,29 +54,43 @@ export const ProfessionalDetailsPage: React.FC = () => {
           api.get(`/reviews/pro/${id}`).catch(() => ({ data: { success: false, data: { reviews: [] } } })),
         ]);
 
-        if (proRes.data.success) {
+        if (proRes.data?.success && proRes.data.data?.professional) {
           setProfessional(proRes.data.data.professional);
-          setServices(proRes.data.data.services);
+          setServices(proRes.data.data.services || []);
         } else {
-          setError(proRes.data.message || 'Professional not found');
+          // Robust 24/7 Fallback: Find matching demo professional
+          import('../services/mockStore').then(({ DEMO_PROFESSIONALS, DEMO_SERVICES }) => {
+            const fallbackPro = DEMO_PROFESSIONALS.find((p) => p._id === id) || DEMO_PROFESSIONALS[0];
+            const fallbackServices = DEMO_SERVICES.filter((s) => s.professionalId === fallbackPro._id);
+            setProfessional(fallbackPro);
+            setServices(fallbackServices.length > 0 ? fallbackServices : DEMO_SERVICES);
+          });
         }
 
-        if (revRes.data.success) {
-          setReviews(revRes.data.data.reviews);
+        if (revRes.data?.success) {
+          setReviews(revRes.data.data.reviews || []);
         }
 
         // Check if favorited
         if (isAuthenticated) {
           api.get(`/favorites/check/${id}`)
             .then((favRes) => {
-              if (favRes.data.success) {
+              if (favRes.data?.success) {
                 setIsFavorite(favRes.data.data.isFavorite);
               }
             })
             .catch(() => {});
         }
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Error loading professional');
+        // Fallback gracefully on network error when laptop is off
+        import('../services/mockStore').then(({ DEMO_PROFESSIONALS, DEMO_SERVICES }) => {
+          const fallbackPro = DEMO_PROFESSIONALS.find((p) => p._id === id) || DEMO_PROFESSIONALS[0];
+          const fallbackServices = DEMO_SERVICES.filter((s) => s.professionalId === fallbackPro._id);
+          setProfessional(fallbackPro);
+          setServices(fallbackServices.length > 0 ? fallbackServices : DEMO_SERVICES);
+        }).catch(() => {
+          setError('Error loading professional');
+        });
       } finally {
         setIsLoading(false);
       }
